@@ -127,10 +127,14 @@ def build_allowed_tools(herd_dir: Path) -> list[str]:
         f"Edit({wiki_glob})",
     ]
     for script_name in ("herd_wiki.py", "herd_calendar.py", "herd_sb_export.py"):
-        rules.append(f"Bash(python3 {scripts_dir / script_name} *)")
-        rules.append(
-            f"Bash(python3 ~/src/herd/.agents/skills/herd-wiki/scripts/{script_name} *)"
-        )
+        for prefix in (
+            str(scripts_dir / script_name),
+            f"~/src/herd/.agents/skills/herd-wiki/scripts/{script_name}",
+            f".agents/skills/herd-wiki/scripts/{script_name}",
+            f".claude/skills/herd-wiki/scripts/{script_name}",
+        ):
+            rules.append(f"Bash(python3 {prefix} *)")
+            rules.append(f"Bash(python3 {prefix})")
     rules.extend(
         [
             f"Bash(bash {sync_sh} *)",
@@ -165,20 +169,20 @@ def build_tick_prompt(agent: str, qc: dict, cfg: dict) -> str:
         f"`CronCreate` or loop indefinitely.\n\n"
         f"Here is your current `quick-check` JSON:\n"
         f"```json\n{qc_json}\n```\n\n"
-        f"Follow the `herd-wiki` skill (`.claude/skills/herd-wiki/SKILL.md`) and `CLAUDE.md`:\n"
+        f"Follow the `herd-wiki` skill (`.claude/skills/herd-wiki/SKILL.md`) and `CLAUDE.md` (always invoke `{HERD_WIKI_PY}` via `python3 {HERD_WIKI_PY} <subcommand>`):\n"
         f"1. Read ONLY the wiki / Second Brain files relevant to `reasons` above (use "
-        f"`herd_wiki.py index` first; never read all wiki files upfront).\n"
+        f"`python3 {HERD_WIKI_PY} index` first; never read all wiki files upfront).\n"
         f"2. **Priority #1 — Peer Review (`own_in_review_tasks` / `review_tasks` / `stale_in_review_tasks`)**: "
-        f"If any peer deliverable awaits verification, claim ONE review (`herd_wiki.py claim-review --agent {agent} --task-id <T-NNN>`), "
+        f"If any peer deliverable awaits verification, claim ONE review (`python3 {HERD_WIKI_PY} claim-review --agent {agent} --task-id <T-NNN>`), "
         f"cross-check every date, number, link, test result, and style/privacy rule against Second Brain or the repo, "
-        f"edit `output--*.md` directly in place if corrections are needed (renaming via `herd_wiki.py rename` if the takeaway changed), "
-        f"and finalize via `herd_wiki.py complete-review --agent {agent} --task-id <T-NNN> --verdict <verified|corrected> --notes \"...\"`.\n"
+        f"edit `output--*.md` directly in place if corrections are needed (renaming via `python3 {HERD_WIKI_PY} rename` if the takeaway changed), "
+        f"and finalize via `python3 {HERD_WIKI_PY} complete-review --agent {agent} --task-id <T-NNN> --verdict <verified|corrected> --notes \"...\"`.\n"
         f"3. **Priority #2 — Second Brain Sync**: If `sb_sync_due` is true, claim & run the Second Brain sync "
-        f"(`sb-check --agent {agent} --claim` -> update focused `kb-*--*.md` pages -> `sb-complete`).\n"
+        f"(`python3 {HERD_WIKI_PY} sb-check --agent {agent} --claim --external-gatekeeper` -> update focused `kb-*--*.md` pages -> `sb-complete`).\n"
         f"4. **Priority #3 — Authoring Open Tasks**: Coordinate with peer agents on `board--*.md` and `collab--*.md` (signing as `@{agent}`). "
         f"If genuinely worthwhile `OPEN` tasks exist (or `human_inbox_updated` / Second Brain changes warrant "
         f"a new high-leverage task), claim and execute ONE task thoroughly to an `output--*.md` file and submit it for peer verification via "
-        f"`herd_wiki.py complete-task --agent {agent} --task-id <T-NNN> --output-file <output--....md> --due YYYY-MM-DD --message \"<1-2 line summary for @runai>\" --notes \"...\"` "
+        f"`python3 {HERD_WIKI_PY} complete-task --agent {agent} --task-id <T-NNN> --output-file <output--....md> --due YYYY-MM-DD --message \"<1-2 line summary for @runai>\" --notes \"...\"` "
         f"(do NOT call `notify-human` prematurely — a peer reviewer will verify and release it to `@runai`).\n"
         f"5. If peers already handled the `updated_wiki_files` and no worthwhile task remains, do NOT invent filler work.\n"
         f"6. Before ending your turn, update your idle watermark via:\n"
