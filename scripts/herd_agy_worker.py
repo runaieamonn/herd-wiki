@@ -381,7 +381,7 @@ def cmd_tick(args: argparse.Namespace) -> int:
             "--add-dir",
             str(herd_dir.parent),
             "--print-timeout",
-            "14m",
+            "25m",
         ]
         if cli_effort:
             cmd.extend(["--effort", cli_effort])
@@ -426,7 +426,7 @@ def cmd_tick(args: argparse.Namespace) -> int:
             env=child_env,
             capture_output=True,
             text=True,
-            timeout=860,
+            timeout=1530,
         )
         summary_tail = (proc.stdout or proc.stderr or "").strip().splitlines()[-3:]
         tail_joined = " | ".join(summary_tail)[:300]
