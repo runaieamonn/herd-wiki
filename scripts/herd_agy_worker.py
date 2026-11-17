@@ -268,7 +268,7 @@ WorkingDirectory={herd_dir}
 Environment="PATH={path_env}"
 Environment="HERD_EXTERNAL_GATEKEEPER=1"
 ExecStart=/usr/bin/python3 {script_abs} tick --agent {agent}
-TimeoutStartSec=900
+TimeoutStartSec=1600
 """
 
     tmr_unit = f"""[Unit]
